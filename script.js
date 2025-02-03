@@ -205,7 +205,7 @@ function main() {
     }
 
     // Load default image texture.
-    loadImageTexture('./examples/lava.png');
+    loadImageTexture('examples/lava.png');
 
     ['rotation', 'blendFalloff', 'blendOffset', 'scale'].forEach(id => {
         const element = document.getElementById(id);
@@ -236,6 +236,7 @@ function main() {
 
     document.querySelectorAll('.example-image').forEach(img => {
         img.addEventListener('click', () => {
+            console.log(img.src);
             loadImageTexture(img.src);
         });
     });
