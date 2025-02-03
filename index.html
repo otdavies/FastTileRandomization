@@ -8,6 +8,24 @@
         label { display: inline-block; width: 100px; font-size: 14px; }
         .value { display: inline-block; width: 40px; text-align: right; font-size: 14px; }
         canvas { border: 1px solid #ddd; }
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            width: 300px;
+        }
+        .example-image {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .example-image:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -35,6 +53,12 @@
                 <label>Scale:</label>
                 <input type="range" id="scale" min="1" max="8" step="0.5" value="2">
                 <span class="value">2.0</span>
+            </div>
+            <div class="example-grid">
+                <img src="examples/lava.png" alt="Lava texture" class="example-image" draggable="false">
+                <img src="examples/stone.png" alt="Stone texture" class="example-image" draggable="false">
+                <img src="examples/wood.png" alt="Wood texture" class="example-image" draggable="false">
+                <img src="examples/dirt.png" alt="Dirt texture" class="example-image" draggable="false">
             </div>
         </div>
         <canvas id="glCanvas" width="512" height="512"></canvas>
@@ -223,6 +247,17 @@
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
+            function loadImageTexture(imagePath) {
+                const image = new Image();
+                image.onload = () => {
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                    useTexture = true;
+                    drawScene();
+                };
+                image.src = imagePath;
+            }
+
             ['rotation', 'blendFalloff', 'blendOffset', 'scale'].forEach(id => {
                 const element = document.getElementById(id);
                 const valueDisplay = element.nextElementSibling;
@@ -248,6 +283,14 @@
                     };
                     reader.readAsDataURL(file);
                 }
+            });
+
+            // Add click handlers for example images
+            document.querySelectorAll('.example-image').forEach(img => {
+                img.addEventListener('click', () => {
+                    console.log(img.src);
+                    loadImageTexture(img.src);
+                });
             });
 
             function drawScene() {
