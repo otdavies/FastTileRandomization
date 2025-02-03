@@ -22,10 +22,10 @@ uniform bool uUseTexture;
 const float FULL_ROTATION = 6.28318530718;
 const vec2 CELL_CENTER = vec2(0.5, 0.5);
 
-vec2 generateRandomVector(vec2 position) {
-    vec3 hash = fract(vec3(position.xyx) * vec3(443.897, 441.423, 437.195));
-    hash += dot(hash, hash.yzx + 19.19);
-    return fract((hash.xx + hash.yz) * hash.zy);
+vec2 generateRandomVector(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+    p = -1.0 + 2.0 * fract(p * 0.0243902439); // 1/41
+    return fract(p * p * (vec2(3.07965, 2.89615) + p.yx * vec2(2.81678, 2.98721)));
 }
 
 vec2 rotateUV(vec2 uv, float angle, vec2 center) {
