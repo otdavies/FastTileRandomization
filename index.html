@@ -32,9 +32,6 @@
     <div class="container">
         <div class="controls">
             <div class="control-item">
-                <input type="file" id="imageInput" accept="image/*">
-            </div>
-            <div class="control-item">
                 <label>Rotation:</label>
                 <input type="range" id="rotation" min="0" max="1" step="0.01" value="1">
                 <span class="value">1</span>
@@ -59,6 +56,9 @@
                 <img src="examples/stone.png" alt="Stone texture" class="example-image" draggable="false">
                 <img src="examples/wood.png" alt="Wood texture" class="example-image" draggable="false">
                 <img src="examples/dirt.png" alt="Dirt texture" class="example-image" draggable="false">
+            </div>
+            <div class="control-item">
+                <input type="file" id="imageInput" accept="image/*">
             </div>
         </div>
         <canvas id="glCanvas" width="512" height="512"></canvas>
