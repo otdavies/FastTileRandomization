@@ -39,14 +39,14 @@
             gap: 2rem;
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .controls-layout {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
             }
             
             .controls-panel {
-                min-height: 280px;
+                min-height: 360px;
             }
             
             .canvas-container {
@@ -63,21 +63,7 @@
                 height: 60px;
             }
         }
-        
-        @media (max-width: 480px) {
-            .example-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.5rem;
-            }
-            
-            .controls-panel {
-                padding: 1rem;
-            }
-            
-            .sliders-grid {
-                gap: 0.75rem;
-            }
-        }
+
         .sliders-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
