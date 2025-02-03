@@ -45,16 +45,13 @@ vec4 samplePattern(vec2 uv) {
 }
 
 void main() {
-    // Build a centered, square coordinate system using a fixed resolution.
-    // Convert the normalized vTextureCoord to pixel coordinates.
+    // Scaling for webpage weirdness
     vec2 pixelCoord = vTextureCoord * uResolution;
-    // Center the coordinate system.
     vec2 centeredPixel = pixelCoord - 0.5 * uResolution;
-    // Divide by the smaller of the width/height to keep cells square.
     vec2 squareCoord = centeredPixel / min(uResolution.x, uResolution.y);
-    // Apply scaling; the center remains fixed at (0,0).
     vec2 uv = squareCoord * uScale * 4.0;
-
+    
+    // Resume normal shader here
     vec2 gridPosition = floor(uv);
     vec2 nearestCorner = gridPosition;
     vec2 nearestCenter = gridPosition + CELL_CENTER;
@@ -206,6 +203,9 @@ function main() {
         };
         image.src = imagePath;
     }
+
+    // Load default image texture.
+    loadImageTexture('./examples/lava.png');
 
     ['rotation', 'blendFalloff', 'blendOffset', 'scale'].forEach(id => {
         const element = document.getElementById(id);
