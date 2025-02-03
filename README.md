@@ -10,7 +10,7 @@ Interactive demonstration of a texture tiling technique that uses dual-point rot
 ## How it works
 The algorithm uses two reference points (corners and centers) to create random rotations of the texture, then blends between them based on distance. This creates a more natural-looking tiling pattern that reduces the obvious repetition typically seen in tiled textures.
 
-https://github.com/user-attachments/assets/07e50035-b544-40eb-8076-a854f8793bca
+![example](https://github.com/user-attachments/assets/d463cfaa-2bfc-43c7-937d-1fe3a5e87bd0)
 
 ## Controls
 - Rotation: Controls the maximum rotation amount
