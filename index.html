@@ -2,66 +2,202 @@
 <html>
 <head>
     <style>
-        .container { display: flex; gap: 20px; padding: 20px; font-family: system-ui, sans-serif; }
-        .controls { min-width: 250px; }
-        .control-item { margin: 8px 0; }
-        label { display: inline-block; width: 100px; font-size: 14px; }
-        .value { display: inline-block; width: 40px; text-align: right; font-size: 14px; }
-        canvas { border: 1px solid #ddd; }
-        .example-grid {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #1e293b;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .controls-panel {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            height: 160px;
+        }
+        .controls-layout {
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 2rem;
+        }
+        .sliders-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-            width: 300px;
+            gap: 1.25rem;
+        }
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .control-item label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .control-item input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 2px;
+        }
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .control-item input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: #60a5fa;
+        }
+        .value {
+            font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.875rem;
+            min-width: 3ch;
+            color: #94a3b8;
+        }
+        .textures-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .textures-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            height: 80px;
         }
         .example-image {
             width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.375rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.15s ease-in-out;
         }
         .example-image:hover {
             transform: scale(1.05);
+            border-color: #3b82f6;
+        }
+        .file-input-wrapper {
+            position: relative;
+            height: 28px;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-button {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .file-input-button:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="controls">
-            <div class="control-item">
-                <label>Rotation:</label>
-                <input type="range" id="rotation" min="0" max="1" step="0.01" value="1">
-                <span class="value">1</span>
+    <div class="canvas-container">
+        <canvas id="glCanvas"></canvas>
+    </div>
+    <div class="controls-panel">
+        <div class="controls-layout">
+            <div class="sliders-grid">
+                <div class="control-item">
+                    <label>Rotation</label>
+                    <div class="slider-row">
+                        <input type="range" id="rotation" min="0" max="1" step="0.01" value="1">
+                        <span class="value">1.00</span>
+                    </div>
+                </div>
+                <div class="control-item">
+                    <label>Blend Falloff</label>
+                    <div class="slider-row">
+                        <input type="range" id="blendFalloff" min="0.1" max="16" step="0.1" value="8">
+                        <span class="value">8.0</span>
+                    </div>
+                </div>
+                <div class="control-item">
+                    <label>Blend Offset</label>
+                    <div class="slider-row">
+                        <input type="range" id="blendOffset" min="0.1" max="8" step="0.1" value="1">
+                        <span class="value">1.0</span>
+                    </div>
+                </div>
+                <div class="control-item">
+                    <label>Scale</label>
+                    <div class="slider-row">
+                        <input type="range" id="scale" min="1" max="8" step="0.5" value="2">
+                        <span class="value">2.0</span>
+                    </div>
+                </div>
             </div>
-            <div class="control-item">
-                <label>Blend Falloff:</label>
-                <input type="range" id="blendFalloff" min="0.1" max="16" step="0.1" value="8">
-                <span class="value">8</span>
-            </div>
-            <div class="control-item">
-                <label>Blend Offset:</label>
-                <input type="range" id="blendOffset" min="0.1" max="8" step="0.1" value="1">
-                <span class="value">1</span>
-            </div>
-            <div class="control-item">
-                <label>Scale:</label>
-                <input type="range" id="scale" min="1" max="8" step="0.5" value="2">
-                <span class="value">2.0</span>
-            </div>
-            <div class="example-grid">
-                <img src="examples/lava.png" alt="Lava texture" class="example-image" draggable="false">
-                <img src="examples/stone.png" alt="Stone texture" class="example-image" draggable="false">
-                <img src="examples/wood.png" alt="Wood texture" class="example-image" draggable="false">
-                <img src="examples/dirt.png" alt="Dirt texture" class="example-image" draggable="false">
-            </div>
-            <div class="control-item">
-                <input type="file" id="imageInput" accept="image/*">
+            <div class="textures-section">
+                <div class="textures-header">Example Textures</div>
+                <div class="example-grid">
+                    <img src="examples/lava.png" alt="Lava texture" class="example-image" draggable="false">
+                    <img src="examples/stone.png" alt="Stone texture" class="example-image" draggable="false">
+                    <img src="examples/wood.png" alt="Wood texture" class="example-image" draggable="false">
+                    <img src="examples/dirt.png" alt="Dirt texture" class="example-image" draggable="false">
+                </div>
+                <div class="file-input-wrapper">
+                    <div class="file-input-button">Upload Custom Texture</div>
+                    <input type="file" id="imageInput" accept="image/*">
+                </div>
             </div>
         </div>
-        <canvas id="glCanvas" width="512" height="512"></canvas>
     </div>
 
     <script>
