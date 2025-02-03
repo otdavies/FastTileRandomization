@@ -266,8 +266,6 @@ function main() {
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
-
-    drawScene();
 }
 
 window.onload = main;
