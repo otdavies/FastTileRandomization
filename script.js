@@ -45,28 +45,28 @@ vec4 samplePattern(vec2 uv) {
 }
 
 void main() {
-    // Build a centered, square coordinate system:
-    // 1. Convert normalized coords to pixel space.
-    // 2. Subtract half the resolution to center.
-    // 3. Divide by min(uResolution.x, uResolution.y) so that one unit = one cell side.
+    // Build a centered, square coordinate system using a fixed resolution.
+    // Convert the normalized vTextureCoord to pixel coordinates.
     vec2 pixelCoord = vTextureCoord * uResolution;
+    // Center the coordinate system.
     vec2 centeredPixel = pixelCoord - 0.5 * uResolution;
+    // Divide by the smaller of the width/height to keep cells square.
     vec2 squareCoord = centeredPixel / min(uResolution.x, uResolution.y);
-    // Now the canvas center maps to (0,0). Apply scaling for zooming.
+    // Apply scaling; the center remains fixed at (0,0).
     vec2 uv = squareCoord * uScale * 4.0;
-    
+
     vec2 gridPosition = floor(uv);
     vec2 nearestCorner = gridPosition;
     vec2 nearestCenter = gridPosition + CELL_CENTER;
     float minDistCell = dot(uv - nearestCorner, uv - nearestCorner);
     float minDistOffset = dot(uv - nearestCenter, uv - nearestCenter) * uBlendOffset;
-    
+
     vec2 corners[4];
     corners[0] = gridPosition;
     corners[1] = gridPosition + vec2(0.0, 1.0);
     corners[2] = gridPosition + vec2(1.0, 0.0);
     corners[3] = gridPosition + vec2(1.0, 1.0);
-    
+
     for(int i = 1; i < 4; i++) {
         vec2 cornerPos = corners[i];
         vec2 centerPos = cornerPos + CELL_CENTER;
@@ -81,13 +81,13 @@ void main() {
             nearestCenter = centerPos;
         }
     }
-    
+
     vec2 random1 = generateRandomVector(nearestCorner) + 1.0;
     vec2 random2 = generateRandomVector(nearestCenter - CELL_CENTER) + 1.0;
-    
+
     vec2 rotatedUV1 = rotateUV(uv, uRotation * FULL_ROTATION * random1.x, nearestCorner);
     vec2 rotatedUV2 = rotateUV(uv, uRotation * FULL_ROTATION * random2.x, nearestCenter);
-    
+
     float blendFactor = clamp((minDistOffset - minDistCell) * uBlendFalloff, 0.0, 1.0);
     vec4 color1 = samplePattern(fract(rotatedUV1));
     vec4 color2 = samplePattern(fract(rotatedUV2));
@@ -129,6 +129,7 @@ function main() {
         return;
     }
 
+    // Only update the canvas size when the window is resized.
     function resizeCanvasToDisplaySize(canvas) {
         const width = canvas.clientWidth * window.devicePixelRatio;
         const height = canvas.clientHeight * window.devicePixelRatio;
@@ -137,6 +138,15 @@ function main() {
             canvas.height = height;
         }
     }
+
+    // Initial resize.
+    resizeCanvasToDisplaySize(canvas);
+
+    // Update canvas size on window resize.
+    window.addEventListener('resize', () => {
+        resizeCanvasToDisplaySize(canvas);
+        drawScene();
+    });
 
     const shaderProgram = initShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
     let useTexture = false;
@@ -231,24 +241,29 @@ function main() {
     });
 
     function drawScene() {
-        resizeCanvasToDisplaySize(canvas);
+        // Do not recalculate canvas size on every draw.
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.useProgram(programInfo.program);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
         gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+
         gl.uniform1f(programInfo.uniformLocations.rotation, parseFloat(document.getElementById('rotation').value));
         gl.uniform1f(programInfo.uniformLocations.blendFalloff, parseFloat(document.getElementById('blendFalloff').value));
         gl.uniform1f(programInfo.uniformLocations.blendOffset, parseFloat(document.getElementById('blendOffset').value));
         gl.uniform1f(programInfo.uniformLocations.scale, parseFloat(document.getElementById('scale').value));
         gl.uniform2f(programInfo.uniformLocations.resolution, canvas.width, canvas.height);
         gl.uniform1i(programInfo.uniformLocations.useTexture, useTexture);
+
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.uniform1i(programInfo.uniformLocations.sampler, 0);
+
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
