@@ -45,46 +45,26 @@ vec4 samplePattern(vec2 uv) {
 }
 
 void main() {
-    // Scaling for webpage weirdness
+    // Scaling adjustment for webpage rendering quirks
     vec2 pixelCoord = vTextureCoord * uResolution;
     vec2 centeredPixel = pixelCoord - 0.5 * uResolution;
     vec2 squareCoord = centeredPixel / min(uResolution.x, uResolution.y);
     vec2 uv = squareCoord * uScale * 4.0;
     
-    // Resume normal shader here
-    vec2 gridPosition = floor(uv);
-    vec2 nearestCorner = gridPosition;
-    vec2 nearestCenter = gridPosition + CELL_CENTER;
+    //  Directly compute the nearest grid corner and center via rounding.
+    vec2 nearestCorner = floor(uv + 0.5);
+    // Nearest center = round(uv - CELL_CENTER) + CELL_CENTER
+    vec2 nearestCenter = floor(uv - CELL_CENTER + 0.5) + CELL_CENTER;
+    
     float minDistCell = dot(uv - nearestCorner, uv - nearestCorner);
     float minDistOffset = dot(uv - nearestCenter, uv - nearestCenter) * uBlendOffset;
-
-    vec2 corners[4];
-    corners[0] = gridPosition;
-    corners[1] = gridPosition + vec2(0.0, 1.0);
-    corners[2] = gridPosition + vec2(1.0, 0.0);
-    corners[3] = gridPosition + vec2(1.0, 1.0);
-
-    for(int i = 1; i < 4; i++) {
-        vec2 cornerPos = corners[i];
-        vec2 centerPos = cornerPos + CELL_CENTER;
-        float distCell = dot(uv - cornerPos, uv - cornerPos);
-        float distOffset = dot(uv - centerPos, uv - centerPos) * uBlendOffset;
-        if(distCell < minDistCell) {
-            minDistCell = distCell;
-            nearestCorner = cornerPos;
-        }
-        if(distOffset < minDistOffset) {
-            minDistOffset = distOffset;
-            nearestCenter = centerPos;
-        }
-    }
-
+    
     vec2 random1 = generateRandomVector(nearestCorner) + 1.0;
     vec2 random2 = generateRandomVector(nearestCenter - CELL_CENTER) + 1.0;
-
+    
     vec2 rotatedUV1 = rotateUV(uv, uRotation * FULL_ROTATION * random1.x, nearestCorner);
     vec2 rotatedUV2 = rotateUV(uv, uRotation * FULL_ROTATION * random2.x, nearestCenter);
-
+    
     float blendFactor = clamp((minDistOffset - minDistCell) * uBlendFalloff, 0.0, 1.0);
     vec4 color1 = samplePattern(fract(rotatedUV1));
     vec4 color2 = samplePattern(fract(rotatedUV2));
