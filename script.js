@@ -17,7 +17,6 @@ uniform float uBlendOffset;
 uniform float uScale;
 uniform vec2 uResolution;
 uniform sampler2D uSampler;
-uniform bool uUseTexture;
 
 const float FULL_ROTATION = 6.28318530718;
 const vec2 CELL_CENTER = vec2(0.5, 0.5);
@@ -36,14 +35,6 @@ vec2 rotateUV(vec2 uv, float angle, vec2 center) {
     return delta + center;
 }
 
-vec4 samplePattern(vec2 uv) {
-    if (uUseTexture) {
-        return texture2D(uSampler, uv);
-    }
-    float checkerboard = mod(floor(uv.x) + floor(uv.y), 2.0);
-    return vec4(mix(vec3(0.8), vec3(0.6), checkerboard), 1.0);
-}
-
 void main() {
     // Scaling adjustment for webpage rendering quirks
     vec2 pixelCoord = vTextureCoord * uResolution;
@@ -53,7 +44,6 @@ void main() {
     
     //  Directly compute the nearest grid corner and center via rounding.
     vec2 nearestCorner = floor(uv + 0.5);
-    // Nearest center = round(uv - CELL_CENTER) + CELL_CENTER
     vec2 nearestCenter = floor(uv - CELL_CENTER + 0.5) + CELL_CENTER;
     
     float minDistCell = dot(uv - nearestCorner, uv - nearestCorner);
@@ -66,8 +56,8 @@ void main() {
     vec2 rotatedUV2 = rotateUV(uv, uRotation * FULL_ROTATION * random2.x, nearestCenter);
     
     float blendFactor = clamp((minDistOffset - minDistCell) * uBlendFalloff, 0.0, 1.0);
-    vec4 color1 = samplePattern(fract(rotatedUV1));
-    vec4 color2 = samplePattern(fract(rotatedUV2));
+    vec4 color1 = texture2D(uSampler,fract(rotatedUV1));
+    vec4 color2 = texture2D(uSampler, fract(rotatedUV2));
     gl_FragColor = mix(color2, color1, blendFactor);
 }
 `;
@@ -139,8 +129,7 @@ function main() {
             blendOffset: gl.getUniformLocation(shaderProgram, 'uBlendOffset'),
             scale: gl.getUniformLocation(shaderProgram, 'uScale'),
             resolution: gl.getUniformLocation(shaderProgram, 'uResolution'),
-            sampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
-            useTexture: gl.getUniformLocation(shaderProgram, 'uUseTexture'),
+            sampler: gl.getUniformLocation(shaderProgram, 'uSampler')
         },
     };
 
