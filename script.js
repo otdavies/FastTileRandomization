@@ -21,10 +21,10 @@ uniform sampler2D uSampler;
 const float FULL_ROTATION = 6.28318530718;
 const vec2 CELL_CENTER = vec2(0.5, 0.5);
 
-vec2 generateRandomVector(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    p = -1.0 + 2.0 * fract(p * 0.0243902439); // 1/41
-    return fract(p * p * (vec2(3.07965, 2.89615) + p.yx * vec2(2.81678, 2.98721)));
+float generateRandomVector(vec2 p) {
+    p = fract(p * vec2(443.897, 441.423));
+    p += dot(p, p + 19.19);
+    return fract(p.x * p.y);
 }
 
 vec2 rotateUV(vec2 uv, float angle, vec2 center) {
@@ -42,22 +42,28 @@ void main() {
     vec2 squareCoord = centeredPixel / min(uResolution.x, uResolution.y);
     vec2 uv = squareCoord * uScale * 4.0;
     
-    //  Directly compute the nearest grid corner and center via rounding.
+    // Directly compute the nearest grid corner and center via rounding.
     vec2 nearestCorner = floor(uv + 0.5);
     vec2 nearestCenter = floor(uv - CELL_CENTER + 0.5) + CELL_CENTER;
+
+    // Generate deterministic random for UV patch rotations
+    float random1 = generateRandomVector(nearestCorner) + 1.0;
+    float random2 = generateRandomVector(nearestCenter - CELL_CENTER) + 1.0;
     
+    // Calculate distances to corner and center points
     float minDistCell = dot(uv - nearestCorner, uv - nearestCorner);
     float minDistOffset = dot(uv - nearestCenter, uv - nearestCenter) * uBlendOffset;
+
+    // Apply different rotations around corner and center points
+    vec2 rotatedUV1 = rotateUV(uv, uRotation * FULL_ROTATION * random1, nearestCorner);
+    vec2 rotatedUV2 = rotateUV(uv, uRotation * FULL_ROTATION * random2, nearestCenter);
     
-    vec2 random1 = generateRandomVector(nearestCorner) + 1.0;
-    vec2 random2 = generateRandomVector(nearestCenter - CELL_CENTER) + 1.0;
-    
-    vec2 rotatedUV1 = rotateUV(uv, uRotation * FULL_ROTATION * random1.x, nearestCorner);
-    vec2 rotatedUV2 = rotateUV(uv, uRotation * FULL_ROTATION * random2.x, nearestCenter);
-    
+    // Create smooth blend between corner and center samples
     float blendFactor = clamp((minDistOffset - minDistCell) * uBlendFalloff, 0.0, 1.0);
     vec4 color1 = texture2D(uSampler,fract(rotatedUV1));
     vec4 color2 = texture2D(uSampler, fract(rotatedUV2));
+
+    // Final blend between corner and center rotated samples
     gl_FragColor = mix(color2, color1, blendFactor);
 }
 `;
