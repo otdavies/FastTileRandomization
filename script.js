@@ -70,8 +70,8 @@ void main()
     vec2 rotatedUV1 = rotateUV(warpedUV, uRotation * FULL_ROTATION * random1, nearestCorner);
     vec2 rotatedUV2 = rotateUV(warpedUV, uRotation * FULL_ROTATION * random2, nearestCenter);
 
-    vec4 color1 = texture2D(uSampler, fract(rotatedUV1));
-    vec4 color2 = texture2D(uSampler, fract(rotatedUV2));
+    vec4 color1 = texture2D(uSampler, rotatedUV1);
+    vec4 color2 = texture2D(uSampler, rotatedUV2);
 
     gl_FragColor = mix(color2, color1, blendFactor);
 }
