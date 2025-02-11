@@ -17,53 +17,62 @@ uniform float uBlendOffset;
 uniform float uScale;
 uniform vec2 uResolution;
 uniform sampler2D uSampler;
+uniform float uWaveAmplitude;
+uniform float uWavePeriod;
 
 const float FULL_ROTATION = 6.28318530718;
 const vec2 CELL_CENTER = vec2(0.5, 0.5);
 
-float generateRandomVector(vec2 p) {
+vec2 warpUV(vec2 uv, float amplitude, float period)
+{
+    return uv + amplitude * vec2(sin(FULL_ROTATION * uv.y / period),
+                                 sin(FULL_ROTATION * uv.x / period));
+}
+
+float generateRandomVector(vec2 p)
+{
     p = fract(p * vec2(443.897, 441.423));
     p += dot(p, p + 19.19);
     return fract(p.x * p.y);
 }
 
-vec2 rotateUV(vec2 uv, float angle, vec2 center) {
+vec2 rotateUV(vec2 uv, float angle, vec2 center)
+{
     vec2 delta = uv - center;
     float s = sin(angle);
     float c = cos(angle);
-    delta = vec2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
-    return delta + center;
+    return vec2(delta.x * c - delta.y * s, delta.x * s + delta.y * c) + center;
 }
 
-void main() {
-    // Scaling adjustment for webpage rendering quirks
+void main()
+{
     vec2 pixelCoord = vTextureCoord * uResolution;
     vec2 centeredPixel = pixelCoord - 0.5 * uResolution;
     vec2 squareCoord = centeredPixel / min(uResolution.x, uResolution.y);
     vec2 uv = squareCoord * uScale * 4.0;
-    
-    // Directly compute the nearest grid corner and center via rounding.
-    vec2 nearestCorner = floor(uv + 0.5);
-    vec2 nearestCenter = floor(uv - CELL_CENTER + 0.5) + CELL_CENTER;
 
-    // Generate deterministic random for UV patch rotations
+    // Warp the UV coordinates to create a wavy tiling pattern.
+    vec2 warpedUV = warpUV(uv, uWaveAmplitude, uWavePeriod);
+
+    // Compute grid points based on the warped UV.
+    vec2 nearestCorner = floor(warpedUV + 0.5);
+    vec2 nearestCenter = floor(warpedUV - CELL_CENTER + 0.5) + CELL_CENTER;
+
     float random1 = generateRandomVector(nearestCorner) + 1.0;
     float random2 = generateRandomVector(nearestCenter - CELL_CENTER) + 1.0;
-    
-    // Calculate distances to corner and center points
-    float minDistCell = dot(uv - nearestCorner, uv - nearestCorner);
-    float minDistOffset = dot(uv - nearestCenter, uv - nearestCenter) * uBlendOffset;
 
-    // Apply different rotations around corner and center points
-    vec2 rotatedUV1 = rotateUV(uv, uRotation * FULL_ROTATION * random1, nearestCorner);
-    vec2 rotatedUV2 = rotateUV(uv, uRotation * FULL_ROTATION * random2, nearestCenter);
-    
-    // Create smooth blend between corner and center samples
-    float blendFactor = clamp((minDistOffset - minDistCell) * uBlendFalloff, 0.0, 1.0);
-    vec4 color1 = texture2D(uSampler,fract(rotatedUV1));
+    // Calculate distances from the warped UV to the grid centers.
+    float dCorner = dot(warpedUV - nearestCorner, warpedUV - nearestCorner);
+    float dCenter = dot(warpedUV - nearestCenter, warpedUV - nearestCenter) * uBlendOffset;
+    float blendFactor = clamp((dCenter - dCorner) * uBlendFalloff, 0.0, 1.0);
+
+    // Apply rotation based on the warped UV.
+    vec2 rotatedUV1 = rotateUV(warpedUV, uRotation * FULL_ROTATION * random1, nearestCorner);
+    vec2 rotatedUV2 = rotateUV(warpedUV, uRotation * FULL_ROTATION * random2, nearestCenter);
+
+    vec4 color1 = texture2D(uSampler, fract(rotatedUV1));
     vec4 color2 = texture2D(uSampler, fract(rotatedUV2));
 
-    // Final blend between corner and center rotated samples
     gl_FragColor = mix(color2, color1, blendFactor);
 }
 `;
@@ -135,7 +144,9 @@ function main() {
             blendOffset: gl.getUniformLocation(shaderProgram, 'uBlendOffset'),
             scale: gl.getUniformLocation(shaderProgram, 'uScale'),
             resolution: gl.getUniformLocation(shaderProgram, 'uResolution'),
-            sampler: gl.getUniformLocation(shaderProgram, 'uSampler')
+            sampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
+            amplitude: gl.getUniformLocation(shaderProgram, 'uWaveAmplitude'),
+            period: gl.getUniformLocation(shaderProgram, 'uWavePeriod'),
         },
     };
 
@@ -182,7 +193,7 @@ function main() {
     // Load default image texture.
     loadImageTexture('examples/lava.png');
 
-    ['rotation', 'blendFalloff', 'blendOffset', 'scale'].forEach(id => {
+    ['rotation', 'blendFalloff', 'blendOffset', 'scale', 'amplitude', 'period'].forEach(id => {
         const element = document.getElementById(id);
         const valueDisplay = element.nextElementSibling;
         element.addEventListener('input', () => {
@@ -233,6 +244,8 @@ function main() {
         gl.uniform1f(programInfo.uniformLocations.blendFalloff, parseFloat(document.getElementById('blendFalloff').value));
         gl.uniform1f(programInfo.uniformLocations.blendOffset, parseFloat(document.getElementById('blendOffset').value));
         gl.uniform1f(programInfo.uniformLocations.scale, parseFloat(document.getElementById('scale').value));
+        gl.uniform1f(programInfo.uniformLocations.amplitude, parseFloat(document.getElementById('amplitude').value));
+        gl.uniform1f(programInfo.uniformLocations.period, parseFloat(document.getElementById('period').value));
         gl.uniform2f(programInfo.uniformLocations.resolution, canvas.width, canvas.height);
         gl.uniform1i(programInfo.uniformLocations.useTexture, useTexture);
 
