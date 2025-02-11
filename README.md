@@ -2,7 +2,7 @@
 
 Interactive demonstration of a texture tiling technique that uses dual-point rotation blending to create seamless textures with reduced repetition artifacts. This only uses 2 texture samples, thus is ideal for real time usage.
 
-[Try Demo](https://otdavies.github.io/DualPointTiling/)
+## [Try Demo](https://otdavies.github.io/DualPointTiling/)
 
 ![chrome_Th3zh0hmF5](https://github.com/user-attachments/assets/03bda29e-e974-4295-a8ba-60bae50437ba)
 
