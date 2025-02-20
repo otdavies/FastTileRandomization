@@ -1,7 +1,7 @@
 # Fast Tile Randomization (FTR)
 
 
-Interactive demonstration of a texture tiling technique that uses dual-point rotation blending to create seamless textures with reduced repetition artifacts. This only uses 2 texture samples, thus is ideal for real time usage.
+Interactive demonstration of a texture tiling technique that uses an overlapping diamond pattern + rotation + blending to reduced repetition artifacts. This only uses 2 texture samples, thus is ideal for real time usage.
 
 ## ---> [Try Demo](https://otdavies.github.io/FastTileRandomization/) <---
 
