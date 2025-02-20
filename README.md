@@ -9,7 +9,7 @@ Interactive demonstration of a texture tiling technique that uses an overlapping
 
 
 ## How it works
-The algorithm uses two reference points (corners and centers) to create random rotations of the texture, then blends between them based on distance. This creates a more natural-looking tiling pattern that reduces the obvious repetition typically seen in tiled textures.
+The algorithm uses two reference points (corners and centers) to create overlapping diamonds of randomly rotated texture patches, then blends between them based on distance. This creates a more natural-looking tiling pattern that reduces the obvious repetition typically seen in tiled textures.
 
 ![example](https://github.com/user-attachments/assets/d463cfaa-2bfc-43c7-937d-1fe3a5e87bd0)
 
